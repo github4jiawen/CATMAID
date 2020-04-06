@@ -13,6 +13,10 @@ Vagrant.configure("2") do |config|
   # extremely slow web host
   #config.vm.box = "ubuntu/bionic64"
   config.vm.box = "bento/ubuntu-18.04"
+  unless Vagrant.has_plugin?("vagrant-disksize")
+    raise "Plugin required to configure disk size: vagrant plugin install vagrant-disksize"
+  end
+  config.disksize.size = '150GB'
   config.vm.synced_folder "./", "/CATMAID"
 
   config.vm.hostname = "catmaid-vm"
@@ -24,7 +28,7 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 8889, host: 8889, host_ip: "127.0.0.1"
   # postgreSQL
   config.vm.network "forwarded_port", guest: 5555, host: 5555, host_ip: "127.0.0.1"
-  
+
   config.vm.network "private_network", type: "dhcp"
 
   config.vm.provision :shell, path: "scripts/vagrant/root.sh"
