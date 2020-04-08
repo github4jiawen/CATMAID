@@ -3,6 +3,7 @@
 # required to prevent virtualbox trying to start several servers
 # on the same interface
 # https://github.com/hashicorp/vagrant/issues/8878#issuecomment-345112810
+
 class VagrantPlugins::ProviderVirtualBox::Action::Network
   def dhcp_server_matches_config?(dhcp_server, config)
     true
@@ -13,10 +14,29 @@ Vagrant.configure("2") do |config|
   # extremely slow web host
   #config.vm.box = "ubuntu/bionic64"
   config.vm.box = "bento/ubuntu-18.04"
-  unless Vagrant.has_plugin?("vagrant-disksize")
-    raise "Plugin required to configure disk size: vagrant plugin install vagrant-disksize"
+
+  if ENV["CATMAID_VM_DISK"]
+    # https://askubuntu.com/a/1209925/439260
+    unless Vagrant.has_plugin?("vagrant-disksize")
+      raise Vagrant::Errors::VagrantError.new, "vagrant-disksize plugin is missing. Install it using 'vagrant plugin install vagrant-disksize' and rerun 'vagrant up'"
+    end
+
+    # increase disk size
+    # https://github.com/sprotheroe/vagrant-disksize/issues/37#issuecomment-573349769
+    config.disksize.size = ENV["CATMAID_VM_DISK"]
+    config.vm.provision "shell", inline: <<-SHELL
+      parted /dev/sda resizepart 1 100%
+      pvresize /dev/sda1
+      lvresize -rl +100%FREE /dev/mapper/vagrant--vg-root
+    SHELL
   end
-  config.disksize.size = '150GB'
+
+  config.vm.provider "virtualbox" do |v|
+    v.memory = ENV["CATMAID_VM_RAM_MB"] ? ENV["CATMAID_VM_RAM_MB"].to_i : 2048
+    v.cpus = ENV["CATMAID_VM_CPUS"] ? ENV["CATMAID_VM_CPUS"].to_i : 2
+  end
+
+  # source directory
   config.vm.synced_folder "./", "/CATMAID"
 
   config.vm.hostname = "catmaid-vm"
@@ -34,7 +54,10 @@ Vagrant.configure("2") do |config|
   config.vm.provision :shell, path: "scripts/vagrant/root.sh"
   config.vm.provision :shell, privileged: false, path: "scripts/vagrant/user.sh"
 
-  tz_name = `timedatectl | grep "Time zone" | awk '{print $3}'`.strip
-  config.vm.provision :shell, privileged: false, :inline => "echo \"#{tz_name}\" > ~/timezone"
+  begin
+    tz_name = `timedatectl | grep "Time zone" | awk '{print $3}'`.strip
+    config.vm.provision :shell, privileged: false, :inline => "echo \"#{tz_name}\" > ~/timezone"
+  rescue SystemCallError
+    puts "POSIX shell not available, using default server timezone"
+  end
 end
-
