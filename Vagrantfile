@@ -29,11 +29,14 @@ Vagrant.configure("2") do |config|
       pvresize /dev/sda1
       lvresize -rl +100%FREE /dev/mapper/vagrant--vg-root
     SHELL
+  puts "Disk size set to #{config.disksize.size}"
   end
 
   config.vm.provider "virtualbox" do |v|
     v.memory = ENV["CATMAID_VM_RAM_MB"] ? ENV["CATMAID_VM_RAM_MB"].to_i : 2048
+    puts "RAM limit set to #{v.memory}MB"
     v.cpus = ENV["CATMAID_VM_CPUS"] ? ENV["CATMAID_VM_CPUS"].to_i : 2
+    puts "CPU limit set to #{v.cpus}"
   end
 
   # source directory
