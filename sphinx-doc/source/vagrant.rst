@@ -88,11 +88,21 @@ More information is available in the `vagrant documentation <https://www.vagrant
 Setup
 -----
 
+Guest machine configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, the guest machine is quite small: it may not be able to hold much data and have poor performance.
+You can customise the machine's "hardware" by setting environment variables on the host machine when the guest is first set up.
+
 The guest's disk size is 60GB by default (but does not take up that much space until it's full).
 To increase this, set the ``CATMAID_VM_DISK`` environment variable to something like ``"100GB"``.
-The guest's RAM size, in MB, will be 2048: change it by setting with ``CATMAID_VM_RAM_MB``.
+The guest's RAM size, in MB, will be 2048: change it by setting ``CATMAID_VM_RAM_MB``.
 It will use 2 CPUs, which can be set with ``CATMAID_VM_CPUS``.
+
 Consider using `direnv <https://direnv.net/>`_ or `dotenv <https://pypi.org/project/python-dotenv/>`_, or adding these variables to your shell rc or profile script, to ensure you always have them set when interacting with Vagrant.
+
+Provisioning
+^^^^^^^^^^^^
 
 The first time the VM is started, it is "provisioned" - i.e. CATMAID's dependencies are installed.
 Subsequent startups will be much faster.
@@ -103,14 +113,14 @@ This provisioning gets you up to step 3 in the basic installation instructions (
 The database and CATMAID configuration are done separately, in case you prefer your own configuration to the recommendations in the installation instructions.
 
 To finish off the installation according to the instructions, SSH into the VM (``vagrant ssh``) and ``bash /CATMAID/scripts/vagrant/optional.sh``.
-If the ``DB_NAME``, ``DB_USER``, ``DB_PASSWORD``, or ``TIMEZONE`` environment variables are set, they will override the defaults (when the machine is provisioned, the host's timezone will be added to ``~/timezone``, which is used as the default timezone here).
+If the ``DB_NAME``, ``DB_USER``, ``DB_PASSWORD``, or ``TIMEZONE`` environment variables are set (on the guest), they will override the defaults (when the machine is provisioned, the host's timezone will be added to ``~/timezone``, which is used as the default timezone here).
 This creates your local settings, applies database migrations, collects static files as symlinks, creates a CATMAID superuser (you will need to input your the username, email, and password), inserts example projects (N.B. the data for these projects is probably not accessible), and sets CATMAID's writable directory to ``/CATMAID/data``.
 
 Virtual machine layout
 ----------------------
 
 The container runs Ubuntu Linux 18.04.
-In Linux, ``/`` is the root directory, and ``~`` is the home directory of the user (called ``vagrant`` in the container).
+In Linux, ``/`` is the root directory, and ``~`` is the home directory of the user (called ``vagrant`` in the container: so ``~`` is ``/home/vagrant``).
 
 * The CATMAID repository is in ``/CATMAID``. This is the exact same directory as lives on the host.
 * The Node environment is stored in ``~/catmaid-npm-overlay/node_modules``, and overlaid onto ``/CATMAID/node_modules``. This prevents it interfering with the host's node environment and vice versa.
