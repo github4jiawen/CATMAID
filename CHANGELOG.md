@@ -123,7 +123,7 @@ Docker:
 
 Vagrant:
 
-- We now support a Vagrant configuration for setting up a full persistent development environment with one command.
+- We now support a Vagrant configuration for setting up a full replicable development environment with minimal effort.
 
 - This is distinct from the Docker image, which is for creating an ephemeral production environment.
 
